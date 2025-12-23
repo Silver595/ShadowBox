@@ -83,9 +83,12 @@ def search_images(query_text):
     if not query_text:
         return []
     
-    text_emb = processor.get_text_embedding(query_text)
-    if text_emb is None:
-        return []
+    try:
+        text_emb = processor.get_text_embedding(query_text)
+        if text_emb is None:
+            raise gr.Error("Embedding generation failed. See logs.")
+    except Exception as e:
+        raise gr.Error(f"Search failed: {str(e)}")
     
     results = db.query_images(text_emb, n_results=9)
     
@@ -119,4 +122,4 @@ with gr.Blocks(title="Local Semantic Image Search") as demo:
         index_btn.click(fn=index_images, inputs=dir_input, outputs=index_output)
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(allowed_paths=["C:\\", "D:\\"])
