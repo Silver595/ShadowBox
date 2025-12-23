@@ -170,16 +170,54 @@ def search_images(query_text):
         logger.error(f"Search failed: {e}")
         raise gr.Error(f"Search failed: {str(e)}")
 
+
+def search_similar_images(image_path):
+    if not image_path:
+        return []
+        
+    try:
+        processor = get_processor()
+        db = get_db()
+        
+        # Determine strictness? For now just raw cosine similarity search
+        image_emb = processor.get_image_embedding(image_path)
+        if image_emb is None:
+            raise ValueError("Embedding generation failed.")
+            
+        results = db.query_images(image_emb, n_results=9)
+        
+        images = []
+        if results and results.get('metadatas') and len(results['metadatas']) > 0:
+            for meta in results['metadatas'][0]:
+                if 'path' in meta:
+                    caption = f"{meta.get('model', 'Unknown')} - {meta.get('date', 'No Date')}\nTags: {meta.get('tags','')}"
+                    images.append((meta['path'], caption))
+        
+        return images
+        
+    except Exception as e:
+        logger.error(f"Image search failed: {e}")
+        raise gr.Error(f"Search failed: {str(e)}")
+
 # UI Layout
 with gr.Blocks(title="Local Semantic Image Search") as demo:
     gr.Markdown("# Local Semantic Image Search & Privacy Tool")
     
-    with gr.Tab("Search"):
+    with gr.Tab("Text Search"):
         search_input = gr.Textbox(label="Search Query", placeholder="e.g., 'A dog running in the park'")
         search_btn = gr.Button("Search")
         gallery = gr.Gallery(label="Results", columns=3, height="auto")
         search_btn.click(fn=search_images, inputs=search_input, outputs=gallery)
         search_input.submit(fn=search_images, inputs=search_input, outputs=gallery)
+
+    with gr.Tab("Image Search"):
+        gr.Markdown("Upload an image to find similar ones in your index.")
+        with gr.Row():
+            img_input = gr.Image(label="Upload Image", type="filepath", height=300)
+            img_gallery = gr.Gallery(label="Similar Images", columns=3, height="auto")
+        
+        img_find_btn = gr.Button("Find Similar Images")
+        img_find_btn.click(fn=search_similar_images, inputs=img_input, outputs=img_gallery)
 
     with gr.Tab("Index"):
         dir_input = gr.Textbox(label="Image Directory Path", value=os.path.abspath("./images"))
