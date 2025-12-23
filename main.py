@@ -191,5 +191,6 @@ if __name__ == "__main__":
     # Allow access to drives where images might be stored
     # This is necessary for a local tool that accesses user files across the system
     allowed_paths = ["C:\\", "D:\\"]
+    demo.queue() # Enable queuing for progress bars
     demo.launch(allowed_paths=allowed_paths)
 

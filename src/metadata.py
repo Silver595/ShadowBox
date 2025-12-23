@@ -1,6 +1,9 @@
 import PIL.Image
 from PIL.ExifTags import TAGS, GPSTAGS
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_exif_data(image_path):
     """
@@ -18,7 +21,7 @@ def get_exif_data(image_path):
         for tag_id, value in exif.items():
             tag = TAGS.get(tag_id, tag_id)
             if tag == 'DateTimeOriginal':
-                data['date'] = value
+                data['date'] = str(value) # Ensure string
             elif tag == 'Model':
                 data['model'] = str(value)
             elif tag == 'Make':
@@ -35,7 +38,7 @@ def get_exif_data(image_path):
         
         return data
     except Exception as e:
-        print(f"Error extracting metadata from {image_path}: {e}")
+        logger.debug(f"Metadata extraction failed or incomplete for {image_path}: {e}")
         return {}
 
 def get_lat_lon(gps_info):
@@ -48,8 +51,15 @@ def get_lat_lon(gps_info):
             return None, None
 
         def _convert_to_degrees(value):
-            d, m, s = value
-            return d + (m / 60.0) + (s / 3600.0)
+            # Safe conversion
+            try:
+                if isinstance(value, tuple) and len(value) == 3:
+                     d, m, s = value
+                     return d + (m / 60.0) + (s / 3600.0)
+                # Handle IFDRational or other types if PIL doesn't convert
+                return float(value)
+            except:
+                return 0.0
 
         lat_raw = gps_info.get(2) # GPSLatitude
         lat_ref = gps_info.get(1) # GPSLatitudeRef
@@ -68,5 +78,6 @@ def get_lat_lon(gps_info):
             return lat, lon
             
         return None, None
-    except Exception:
+    except Exception as e:
+        # GPS parsing errors are common and low priority
         return None, None
