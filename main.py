@@ -46,7 +46,7 @@ def get_db():
             raise
     return _db
 
-def index_images(directory_path):
+def index_images(directory_path, progress=gr.Progress()):
     if not directory_path:
         return "Please provide a directory path."
     
@@ -62,6 +62,7 @@ def index_images(directory_path):
     image_files = []
     
     try:
+        progress(0, desc="Scanning directory...")
         for ext in image_extensions:
             # Case-insensitive search simulation for Windows/Linux compatibility if strict case needed
             # But standard glob is usually sufficient. 
@@ -82,10 +83,14 @@ def index_images(directory_path):
         embeddings = []
         metadatas = []
         count = 0
+        total_images = len(image_files)
         
-        logger.info(f"Found {len(image_files)} images to process in {safe_path}")
+        logger.info(f"Found {total_images} images to process in {safe_path}")
 
-        for img_path in image_files:
+        for i, img_path in enumerate(image_files):
+            # Update progress
+            progress((i / total_images), desc=f"Processing {os.path.basename(img_path)}...")
+            
             try:
                 emb = processor.get_image_embedding(img_path)
                 if emb is None:
@@ -119,8 +124,8 @@ def index_images(directory_path):
                 metadatas.append(clean_meta)
                 count += 1
                 
-                # Batch add
-                if len(ids) >= 10:
+                # Batch add - increased to 50 for performance
+                if len(ids) >= 50:
                     db.add_images(ids, embeddings, metadatas)
                     ids, embeddings, metadatas = [], [], []
                     
@@ -132,7 +137,7 @@ def index_images(directory_path):
             db.add_images(ids, embeddings, metadatas)
 
         logger.info(f"Indexing complete. Indexed {count} images.")
-        return f"Indexed {count} images from {safe_path}"
+        return f"Indexing Complete! Indexed {count} images from {safe_path}"
 
     except Exception as e:
         logger.error(f"Indexing process failed: {e}")
