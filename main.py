@@ -64,11 +64,9 @@ def index_images(directory_path, progress=gr.Progress()):
     try:
         progress(0, desc="Scanning directory...")
         for ext in image_extensions:
-            # Case-insensitive search simulation for Windows/Linux compatibility if strict case needed
-            # But standard glob is usually sufficient. 
-            image_files.extend(glob.glob(os.path.join(safe_path, ext)))
-            # Also try uppercase extensions
-            image_files.extend(glob.glob(os.path.join(safe_path, ext.upper())))
+            # Recursive search with **
+            image_files.extend(glob.glob(os.path.join(safe_path, "**", ext), recursive=True))
+            image_files.extend(glob.glob(os.path.join(safe_path, "**", ext.upper()), recursive=True))
             
         # Deduplicate
         image_files = list(set(image_files))
@@ -143,7 +141,7 @@ def index_images(directory_path, progress=gr.Progress()):
         logger.error(f"Indexing process failed: {e}")
         return f"Error during indexing: {str(e)}"
 
-def search_images(query_text):
+def search_images(query_text, n_results=9):
     if not query_text:
         return []
     
@@ -155,7 +153,7 @@ def search_images(query_text):
         if text_emb is None:
             raise ValueError("Embedding generation failed.")
             
-        results = db.query_images(text_emb, n_results=9)
+        results = db.query_images(text_emb, n_results=n_results)
         
         images = []
         if results and results.get('metadatas') and len(results['metadatas']) > 0:
@@ -171,7 +169,7 @@ def search_images(query_text):
         raise gr.Error(f"Search failed: {str(e)}")
 
 
-def search_similar_images(image_path):
+def search_similar_images(image_path, n_results=9):
     if not image_path:
         return []
         
@@ -184,7 +182,7 @@ def search_similar_images(image_path):
         if image_emb is None:
             raise ValueError("Embedding generation failed.")
             
-        results = db.query_images(image_emb, n_results=9)
+        results = db.query_images(image_emb, n_results=n_results)
         
         images = []
         if results and results.get('metadatas') and len(results['metadatas']) > 0:
@@ -200,30 +198,99 @@ def search_similar_images(image_path):
         raise gr.Error(f"Search failed: {str(e)}")
 
 # UI Layout
-with gr.Blocks(title="Local Semantic Image Search") as demo:
-    gr.Markdown("# Local Semantic Image Search & Privacy Tool")
+# UI Layout
+# Custom CSS for Animations and Font
+custom_css = """
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.gradio-container {
+    animation: fadeIn 0.8s ease-out;
+}
+
+/* Button Hover Effects */
+button {
+    transition: all 0.3s ease !important;
+}
+
+button:hover {
+    transform: scale(1.02);
+    opacity: 0.9;
+}
+"""
+
+# Minimalist / Architectural Theme
+theme = gr.themes.Monochrome(
+    primary_hue="neutral",
+    secondary_hue="neutral",
+    neutral_hue="neutral",
+    radius_size=gr.themes.sizes.radius_none,
+    font=[gr.themes.GoogleFont("Space Grotesk"), "ui-sans-serif", "system-ui", "sans-serif"],
+)
+
+with gr.Blocks(title="Local Semantic Image Search", theme=theme, css=custom_css) as demo:
+    gr.Markdown(
+        """
+        <div style="text-align: center; max-width: 800px; margin: 2rem auto; font-family: 'Space Grotesk', sans-serif;">
+            <h1 style="font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.5rem;">Local Semantic Image Search</h1>
+            <p style="font-size: 0.9rem; letter-spacing: 1px; color: #666; text-transform: uppercase;">Private / Offline / AI-Powered</p>
+        </div>
+        """
+    )
     
-    with gr.Tab("Text Search"):
-        search_input = gr.Textbox(label="Search Query", placeholder="e.g., 'A dog running in the park'")
-        search_btn = gr.Button("Search")
-        gallery = gr.Gallery(label="Results", columns=3, height="auto")
-        search_btn.click(fn=search_images, inputs=search_input, outputs=gallery)
-        search_input.submit(fn=search_images, inputs=search_input, outputs=gallery)
+    with gr.Tabs():
+        with gr.TabItem("TEXT SEARCH"):
+            with gr.Row():
+                with gr.Column(scale=1, variant="panel"):
+                    search_input = gr.Textbox(
+                        label="SEARCH QUERY", 
+                        placeholder="E.g. A golden retriever playing in the snow...",
+                        lines=2,
+                        show_label=True
+                    )
+                    with gr.Accordion("SEARCH SETTINGS", open=False):
+                        n_results_text = gr.Slider(minimum=1, maximum=50, value=9, step=1, label="NUMBER OF RESULTS")
+                    
+                    search_btn = gr.Button("SEARCH", variant="primary", size="lg")
+                
+                with gr.Column(scale=2):
+                    gallery = gr.Gallery(label="RESULTS", columns=[3], height="auto", object_fit="contain")
+            
+            # Event triggers
+            search_btn.click(fn=search_images, inputs=[search_input, n_results_text], outputs=gallery)
+            search_input.submit(fn=search_images, inputs=[search_input, n_results_text], outputs=gallery)
 
-    with gr.Tab("Image Search"):
-        gr.Markdown("Upload an image to find similar ones in your index.")
-        with gr.Row():
-            img_input = gr.Image(label="Upload Image", type="filepath", height=300)
-            img_gallery = gr.Gallery(label="Similar Images", columns=3, height="auto")
-        
-        img_find_btn = gr.Button("Find Similar Images")
-        img_find_btn.click(fn=search_similar_images, inputs=img_input, outputs=img_gallery)
+        with gr.TabItem("IMAGE SEARCH"):
+            with gr.Row():
+                with gr.Column(scale=1, variant="panel"):
+                    img_input = gr.Image(label="UPLOAD IMAGE", type="filepath", height=300)
+                    with gr.Accordion("SEARCH SETTINGS", open=False):
+                        n_results_img = gr.Slider(minimum=1, maximum=50, value=9, step=1, label="NUMBER OF RESULTS")
+                    img_find_btn = gr.Button("FIND SIMILAR", variant="primary", size="lg")
+                
+                with gr.Column(scale=2):
+                    img_gallery = gr.Gallery(label="SIMILAR IMAGES", columns=[3], height="auto", object_fit="contain")
+            
+            img_find_btn.click(fn=search_similar_images, inputs=[img_input, n_results_img], outputs=img_gallery)
 
-    with gr.Tab("Index"):
-        dir_input = gr.Textbox(label="Image Directory Path", value=os.path.abspath("./images"))
-        index_btn = gr.Button("Start Indexing")
-        index_output = gr.Textbox(label="Status")
-        index_btn.click(fn=index_images, inputs=dir_input, outputs=index_output)
+        with gr.TabItem("INDEX MANAGEMENT"):
+            with gr.Row():
+                with gr.Column():
+                    gr.Markdown("### INDEX NEW IMAGES")
+                    dir_input = gr.Textbox(
+                        label="DIRECTORY PATH", 
+                        value=os.path.abspath("./images"),
+                        placeholder="C:\\Users\\Photos..."
+                    )
+                    gr.Markdown("*Note: The indexer scans all subfolders recursively.*")
+                    index_btn = gr.Button("START INDEXING", variant="secondary")
+                
+                with gr.Column():
+                     index_output = gr.Textbox(label="STATUS LOG", lines=10, interactive=False)
+            
+            index_btn.click(fn=index_images, inputs=dir_input, outputs=index_output)
 
 if __name__ == "__main__":
     # Allow access to drives where images might be stored
