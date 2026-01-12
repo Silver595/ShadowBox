@@ -110,3 +110,63 @@
 2025-12-23 16:15:37,436 - INFO - Adding batch of 50 images to database.
 2025-12-23 16:15:38,937 - INFO - Adding batch of 3 images to database.
 2025-12-23 16:15:38,956 - INFO - Indexing complete. Indexed 303 images.
+2025-12-26 17:15:35,857 - INFO - HTTP Request: GET http://127.0.0.1:7860/gradio_api/startup-events "HTTP/1.1 200 OK"
+2025-12-26 17:15:36,094 - INFO - HTTP Request: HEAD http://127.0.0.1:7860/ "HTTP/1.1 200 OK"
+2025-12-26 17:15:36,486 - INFO - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2025-12-26 17:15:54,331 - INFO - HTTP Request: GET http://127.0.0.1:7860/gradio_api/startup-events "HTTP/1.1 200 OK"
+2025-12-26 17:15:54,363 - INFO - HTTP Request: HEAD http://127.0.0.1:7860/ "HTTP/1.1 200 OK"
+2025-12-26 17:15:54,742 - INFO - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2025-12-26 17:16:23,135 - INFO - Initializing ImageProcessor...
+2025-12-26 17:16:23,137 - INFO - Loading CLIP model on cpu...
+2025-12-26 17:16:31,374 - INFO - ImageProcessor initialized successfully.
+2025-12-26 17:16:31,376 - INFO - Initializing VectorDB...
+2025-12-26 17:16:31,377 - INFO - Connecting to ChromaDB at d:/image_python/chroma_db...
+2025-12-26 17:16:31,986 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-12-26 17:16:32,274 - INFO - VectorDB initialized successfully.
+2025-12-26 17:16:32,274 - INFO - Found 303 images to process in D:\image_python\images
+2025-12-26 17:17:01,577 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:17:30,538 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:17:59,073 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:18:27,863 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:18:56,964 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:19:25,379 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:19:27,038 - INFO - Adding batch of 3 images to database.
+2025-12-26 17:19:27,074 - INFO - Indexing complete. Indexed 303 images.
+2025-12-26 17:25:10,313 - INFO - HTTP Request: GET http://127.0.0.1:7860/gradio_api/startup-events "HTTP/1.1 200 OK"
+2025-12-26 17:25:10,335 - INFO - HTTP Request: HEAD http://127.0.0.1:7860/ "HTTP/1.1 200 OK"
+2025-12-26 17:25:11,156 - INFO - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2025-12-26 17:25:24,567 - INFO - Initializing ImageProcessor...
+2025-12-26 17:25:24,567 - INFO - Loading CLIP model on cpu...
+2025-12-26 17:25:32,194 - INFO - ImageProcessor initialized successfully.
+2025-12-26 17:25:32,196 - INFO - Initializing VectorDB...
+2025-12-26 17:25:32,196 - INFO - Connecting to ChromaDB at d:/image_python/chroma_db...
+2025-12-26 17:25:32,283 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-12-26 17:25:32,438 - INFO - VectorDB initialized successfully.
+2025-12-26 17:25:32,438 - INFO - Found 303 images to process in D:\image_python\images
+2025-12-26 17:26:01,479 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:26:30,138 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:26:59,992 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:27:27,108 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:27:54,407 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:28:21,571 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:28:23,311 - INFO - Adding batch of 3 images to database.
+2025-12-26 17:28:23,351 - INFO - Indexing complete. Indexed 303 images.
+2025-12-26 17:33:44,622 - INFO - HTTP Request: GET http://127.0.0.1:7860/gradio_api/startup-events "HTTP/1.1 200 OK"
+2025-12-26 17:33:44,659 - INFO - HTTP Request: HEAD http://127.0.0.1:7860/ "HTTP/1.1 200 OK"
+2025-12-26 17:33:45,306 - INFO - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2025-12-26 17:36:32,686 - INFO - Initializing ImageProcessor...
+2025-12-26 17:36:32,688 - INFO - Loading CLIP model on cpu...
+2025-12-26 17:36:39,540 - INFO - ImageProcessor initialized successfully.
+2025-12-26 17:36:39,540 - INFO - Initializing VectorDB...
+2025-12-26 17:36:39,540 - INFO - Connecting to ChromaDB at d:/image_python/chroma_db...
+2025-12-26 17:36:39,627 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2025-12-26 17:36:39,783 - INFO - VectorDB initialized successfully.
+2025-12-26 17:36:39,784 - INFO - Found 303 images to process in D:\image_python\images
+2025-12-26 17:37:08,488 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:37:35,438 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:38:06,694 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:38:38,685 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:39:09,572 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:39:41,496 - INFO - Adding batch of 50 images to database.
+2025-12-26 17:39:43,305 - INFO - Adding batch of 3 images to database.
+2025-12-26 17:39:43,332 - INFO - Indexing complete. Indexed 303 images.
