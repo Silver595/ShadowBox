@@ -13,8 +13,8 @@ A private, offline tool to search your photos using AI. Just type what you're lo
 
 1.  **Get the code**:
     ```bash
-    git clone https://github.com/YourUsername/LocalImageSearch.git
-    cd LocalImageSearch
+    git clone https://github.com/Silver595/ShadowBox
+    cd ShadowBox
     ```
 
 2.  **Install dependencies**:
