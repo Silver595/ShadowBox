@@ -27,3 +27,16 @@ class VectorDB:
             n_results=n_results
         )
         return results
+
+    def get_existing_ids(self):
+        """
+        Returns a set of all IDs currently in the database.
+        """
+        try:
+            # ChromaDB get() returns all if no args provided, but check limit
+            # For large datasets, this might need pagination, but for local use <100k it's fine
+            existing = self.collection.get(include=[])
+            return set(existing['ids'])
+        except Exception as e:
+            logger.error(f"Failed to fetch existing IDs: {e}")
+            return set()

@@ -42,6 +42,49 @@ class ImageProcessor:
                 return self.get_image_embedding(image_path)
             return None
 
+    def get_image_embeddings_batch(self, image_paths):
+        """
+        Process a batch of images and return a list of embeddings.
+        Returns None for failed images in the list (maintaining order is hard if some fail mid-batch, 
+        so we process carefully or return list of (emb|None)).
+        """
+        valid_images = []
+        valid_indices = []
+        embeddings = [None] * len(image_paths)
+
+        # 1. Load Images
+        for idx, path in enumerate(image_paths):
+            try:
+                img = self._prepare_image(path)
+                valid_images.append(img)
+                valid_indices.append(idx)
+            except Exception as e:
+                logger.warning(f"Failed to load image for batch {path}: {e}")
+
+        if not valid_images:
+            return embeddings
+
+        # 2. Batch Inference
+        try:
+            inputs = self.processor(images=valid_images, return_tensors="pt", padding=True).to(self.device)
+            with torch.no_grad():
+                features = self.model.get_image_features(**inputs)
+            
+            features = features / features.norm(p=2, dim=-1, keepdim=True)
+            features_np = features.cpu().numpy()
+
+            # 3. Map back to original order
+            for i, real_idx in enumerate(valid_indices):
+                embeddings[real_idx] = features_np[i].tolist()
+        
+        except Exception as e:
+            logger.error(f"Batch inference failed: {e}")
+            # Fallback to single processing if batch fails (e.g. OOM)
+            for idx in valid_indices:
+                embeddings[idx] = self.get_image_embedding(image_paths[idx])
+
+        return embeddings
+
     def get_text_embedding(self, text):
         try:
             inputs = self.processor(text=[text], return_tensors="pt", padding=True).to(self.device)

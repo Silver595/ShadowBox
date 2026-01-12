@@ -77,65 +77,76 @@ def index_images(directory_path, progress=gr.Progress()):
         processor = get_processor()
         db = get_db()
 
+        # Incremental Indexing: Filter out already indexed images
+        existing_ids = db.get_existing_ids()
+        new_files = [f for f in image_files if os.path.basename(f) not in existing_ids]
+        
+        if not new_files:
+            return f"No new images to index. {len(image_files)} files already in database."
+
+        logger.info(f"Found {len(new_files)} new images to process out of {len(image_files)} total.")
+
         ids = []
         embeddings = []
         metadatas = []
         count = 0
-        total_images = len(image_files)
+        total_new = len(new_files)
+        batch_size = 32
         
-        logger.info(f"Found {total_images} images to process in {safe_path}")
-
-        for i, img_path in enumerate(image_files):
-            # Update progress
-            progress((i / total_images), desc=f"Processing {os.path.basename(img_path)}...")
+        # Batch Processing Loop
+        for i in range(0, total_new, batch_size):
+            batch_paths = new_files[i : i + batch_size]
+            current_batch_size = len(batch_paths)
+            
+            progress((i / total_new), desc=f"Processing batch {i}/{total_new}...")
             
             try:
-                emb = processor.get_image_embedding(img_path)
-                if emb is None:
-                    continue
+                # 1. Batch Inference
+                batch_embeddings = processor.get_image_embeddings_batch(batch_paths)
+                
+                # 2. Process Metadata & Tags for the batch
+                for idx, img_path in enumerate(batch_paths):
+                    emb = batch_embeddings[idx]
+                    if emb is None:
+                        continue
+                        
+                    meta = get_exif_data(img_path)
                     
-                meta = get_exif_data(img_path)
-                
-                # Sanitize metadata for ChromaDB
-                clean_meta = {}
-                for k, v in meta.items():
-                    if isinstance(v, (str, int, float, bool)):
-                        clean_meta[k] = v
-                    else:
-                        clean_meta[k] = str(v)
-                
-                # Auto-Tagging
-                try:
-                    probs = processor.get_probs(img_path, COMMON_TAGS)
-                    top_tags = sorted(probs.items(), key=lambda x: x[1], reverse=True)[:5]
-                    found_tags = [tag for tag, score in top_tags if score > 0.05]
-                    clean_meta['tags'] = ", ".join(found_tags)
-                except Exception as tag_err:
-                    logger.warning(f"Tagging failed for {img_path}: {tag_err}")
-                    clean_meta['tags'] = ""
-                
-                clean_meta['path'] = img_path
-                
-                # Use filename as ID, ensure uniqueness could be handled better in production
-                ids.append(os.path.basename(img_path))
-                embeddings.append(emb)
-                metadatas.append(clean_meta)
-                count += 1
-                
-                # Batch add - increased to 50 for performance
-                if len(ids) >= 50:
+                    # Sanitize metadata
+                    clean_meta = {}
+                    for k, v in meta.items():
+                        if isinstance(v, (str, int, float, bool)):
+                            clean_meta[k] = v
+                        else:
+                            clean_meta[k] = str(v)
+                    
+                    # Auto-Tagging (Still per-image for now, could be batched if CLIP usage refined)
+                    # For speed, we might want to skip or batch this too, but let's keep it simple for now
+                    try:
+                        probs = processor.get_probs(img_path, COMMON_TAGS)
+                        top_tags = sorted(probs.items(), key=lambda x: x[1], reverse=True)[:5]
+                        found_tags = [tag for tag, score in top_tags if score > 0.05]
+                        clean_meta['tags'] = ", ".join(found_tags)
+                    except Exception:
+                        clean_meta['tags'] = ""
+                    
+                    clean_meta['path'] = img_path
+                    
+                    ids.append(os.path.basename(img_path))
+                    embeddings.append(emb)
+                    metadatas.append(clean_meta)
+                    count += 1
+            
+                # 3. Add to DB (flush every batch to keep memory low)
+                if ids:
                     db.add_images(ids, embeddings, metadatas)
                     ids, embeddings, metadatas = [], [], []
                     
             except Exception as e:
-                logger.error(f"Error processing {img_path}: {e}")
+                logger.error(f"Error processing batch starting at {i}: {e}")
 
-        # Add remaining
-        if ids:
-            db.add_images(ids, embeddings, metadatas)
-
-        logger.info(f"Indexing complete. Indexed {count} images.")
-        return f"Indexing Complete! Indexed {count} images from {safe_path}"
+        logger.info(f"Indexing complete. Added {count} new images.")
+        return f"Indexing Complete! Added {count} new images from {safe_path}"
 
     except Exception as e:
         logger.error(f"Indexing process failed: {e}")
@@ -159,8 +170,13 @@ def search_images(query_text, n_results=9):
         if results and results.get('metadatas') and len(results['metadatas']) > 0:
             for meta in results['metadatas'][0]:
                 if 'path' in meta:
-                    caption = f"{meta.get('model', 'Unknown')} - {meta.get('date', 'No Date')}\nTags: {meta.get('tags','')}"
-                    images.append((meta['path'], caption))
+                    raw_path = meta['path']
+                    # Normalize for OS compatibility (fixes mixed slashes)
+                    norm_path = os.path.normpath(raw_path)
+                    
+                    if os.path.exists(norm_path):
+                        caption = f"{meta.get('model', 'Unknown')} - {meta.get('date', 'No Date')}\nTags: {meta.get('tags','')}"
+                        images.append((norm_path, caption))
         
         return images
         
@@ -188,8 +204,12 @@ def search_similar_images(image_path, n_results=9):
         if results and results.get('metadatas') and len(results['metadatas']) > 0:
             for meta in results['metadatas'][0]:
                 if 'path' in meta:
-                    caption = f"{meta.get('model', 'Unknown')} - {meta.get('date', 'No Date')}\nTags: {meta.get('tags','')}"
-                    images.append((meta['path'], caption))
+                    raw_path = meta['path']
+                    norm_path = os.path.normpath(raw_path)
+                    
+                    if os.path.exists(norm_path):
+                        caption = f"{meta.get('model', 'Unknown')} - {meta.get('date', 'No Date')}\nTags: {meta.get('tags','')}"
+                        images.append((norm_path, caption))
         
         return images
         
