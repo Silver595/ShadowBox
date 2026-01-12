@@ -200,3 +200,25 @@
 2026-01-12 08:08:41,463 - INFO - Connecting to ChromaDB at d:/image_python/chroma_db...
 2026-01-12 08:08:41,520 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
 2026-01-12 08:08:41,673 - INFO - VectorDB initialized successfully.
+2026-01-12 08:14:55,850 - INFO - HTTP Request: GET http://127.0.0.1:7860/gradio_api/startup-events "HTTP/1.1 200 OK"
+2026-01-12 08:14:55,872 - INFO - HTTP Request: HEAD http://127.0.0.1:7860/ "HTTP/1.1 200 OK"
+2026-01-12 08:14:56,674 - INFO - HTTP Request: GET https://api.gradio.app/pkg-version "HTTP/1.1 200 OK"
+2026-01-12 08:15:06,533 - INFO - Initializing ImageProcessor...
+2026-01-12 08:15:06,534 - INFO - Loading CLIP model on cpu...
+2026-01-12 08:15:12,536 - INFO - ImageProcessor initialized successfully.
+2026-01-12 08:15:12,538 - INFO - Initializing VectorDB...
+2026-01-12 08:15:12,538 - INFO - Connecting to ChromaDB at d:/image_python/chroma_db...
+2026-01-12 08:15:12,607 - INFO - Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+2026-01-12 08:15:12,763 - INFO - VectorDB initialized successfully.
+2026-01-12 08:15:12,839 - INFO - Found 303 new images to process out of 303 total.
+2026-01-12 08:15:33,124 - INFO - Adding batch of 32 images to database.
+2026-01-12 08:15:50,966 - INFO - Adding batch of 32 images to database.
+2026-01-12 08:16:08,691 - INFO - Adding batch of 32 images to database.
+2026-01-12 08:16:26,644 - INFO - Adding batch of 32 images to database.
+2026-01-12 08:16:44,471 - INFO - Adding batch of 32 images to database.
+2026-01-12 08:17:02,496 - INFO - Adding batch of 32 images to database.
+2026-01-12 08:17:21,077 - INFO - Adding batch of 32 images to database.
+2026-01-12 08:17:39,442 - INFO - Adding batch of 32 images to database.
+2026-01-12 08:17:57,837 - INFO - Adding batch of 32 images to database.
+2026-01-12 08:18:06,960 - INFO - Adding batch of 15 images to database.
+2026-01-12 08:18:07,005 - INFO - Indexing complete. Added 303 new images.

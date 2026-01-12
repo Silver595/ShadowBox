@@ -2,6 +2,7 @@ import gradio as gr
 import os
 import glob
 import logging
+import hashlib
 from src.processor import ImageProcessor
 from src.metadata import get_exif_data
 from src.database import VectorDB
@@ -78,11 +79,18 @@ def index_images(directory_path, progress=gr.Progress()):
         db = get_db()
 
         # Incremental Indexing: Filter out already indexed images
+        # IDs are now hashes of the absolute path
         existing_ids = db.get_existing_ids()
-        new_files = [f for f in image_files if os.path.basename(f) not in existing_ids]
+        
+        # Helper to compute hash
+        def get_id(path):
+            return hashlib.sha256(path.encode()).hexdigest()
+
+        # Filter candidates
+        new_files = [f for f in image_files if get_id(f) not in existing_ids]
         
         if not new_files:
-            return f"No new images to index. {len(image_files)} files already in database."
+            return f"No new images to index. Checked {len(image_files)} files."
 
         logger.info(f"Found {len(new_files)} new images to process out of {len(image_files)} total.")
 
@@ -120,8 +128,6 @@ def index_images(directory_path, progress=gr.Progress()):
                         else:
                             clean_meta[k] = str(v)
                     
-                    # Auto-Tagging (Still per-image for now, could be batched if CLIP usage refined)
-                    # For speed, we might want to skip or batch this too, but let's keep it simple for now
                     try:
                         probs = processor.get_probs(img_path, COMMON_TAGS)
                         top_tags = sorted(probs.items(), key=lambda x: x[1], reverse=True)[:5]
@@ -132,7 +138,10 @@ def index_images(directory_path, progress=gr.Progress()):
                     
                     clean_meta['path'] = img_path
                     
-                    ids.append(os.path.basename(img_path))
+                    # Generate Unique ID
+                    file_id = get_id(img_path)
+                    
+                    ids.append(file_id)
                     embeddings.append(emb)
                     metadatas.append(clean_meta)
                     count += 1
