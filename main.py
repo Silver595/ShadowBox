@@ -173,7 +173,9 @@ def search_images(query_text, n_results=9):
         if text_emb is None:
             raise ValueError("Embedding generation failed.")
             
-        results = db.query_images(text_emb, n_results=n_results)
+        # Oversample to handle potential ghost/missing files
+        # We ask for 5x the results, filter valid ones, then slice to n_results
+        results = db.query_images(text_emb, n_results=n_results * 5)
         
         images = []
         if results and results.get('metadatas') and len(results['metadatas']) > 0:
@@ -186,6 +188,9 @@ def search_images(query_text, n_results=9):
                     if os.path.exists(norm_path):
                         caption = f"{meta.get('model', 'Unknown')} - {meta.get('date', 'No Date')}\nTags: {meta.get('tags','')}"
                         images.append((norm_path, caption))
+                        
+                        if len(images) >= n_results:
+                            break
         
         return images
         
@@ -207,7 +212,8 @@ def search_similar_images(image_path, n_results=9):
         if image_emb is None:
             raise ValueError("Embedding generation failed.")
             
-        results = db.query_images(image_emb, n_results=n_results)
+        # Oversample
+        results = db.query_images(image_emb, n_results=n_results * 5)
         
         images = []
         if results and results.get('metadatas') and len(results['metadatas']) > 0:
@@ -219,6 +225,9 @@ def search_similar_images(image_path, n_results=9):
                     if os.path.exists(norm_path):
                         caption = f"{meta.get('model', 'Unknown')} - {meta.get('date', 'No Date')}\nTags: {meta.get('tags','')}"
                         images.append((norm_path, caption))
+                        
+                        if len(images) >= n_results:
+                            break
         
         return images
         
@@ -227,29 +236,6 @@ def search_similar_images(image_path, n_results=9):
         raise gr.Error(f"Search failed: {str(e)}")
 
 # UI Layout
-# UI Layout
-# Custom CSS for Animations and Font
-custom_css = """
-@keyframes fadeIn {
-    0% { opacity: 0; transform: translateY(10px); }
-    100% { opacity: 1; transform: translateY(0); }
-}
-
-.gradio-container {
-    animation: fadeIn 0.8s ease-out;
-}
-
-/* Button Hover Effects */
-button {
-    transition: all 0.3s ease !important;
-}
-
-button:hover {
-    transform: scale(1.02);
-    opacity: 0.9;
-}
-"""
-
 # Minimalist / Architectural Theme
 theme = gr.themes.Monochrome(
     primary_hue="neutral",
@@ -259,7 +245,7 @@ theme = gr.themes.Monochrome(
     font=[gr.themes.GoogleFont("Space Grotesk"), "ui-sans-serif", "system-ui", "sans-serif"],
 )
 
-with gr.Blocks(title="Local Semantic Image Search", theme=theme, css=custom_css) as demo:
+with gr.Blocks(title="Local Semantic Image Search", theme=theme) as demo:
     gr.Markdown(
         """
         <div style="text-align: center; max-width: 800px; margin: 2rem auto; font-family: 'Space Grotesk', sans-serif;">
