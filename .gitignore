@@ -18,3 +18,8 @@ app.log
 debug_paths.py
 diagnose_db.py
 dummy_test.jpg
+
+# PyInstaller / Build
+build/
+dist/
+*.spec
